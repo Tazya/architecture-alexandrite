@@ -1,0 +1,33 @@
+@startuml
+box "UI" #LightYellow
+participant MES as MES
+end box
+
+participant "CRM API"  as CRMAPI
+participant "MES API"  as MESAPI
+
+box "Broker" #Orange
+participant RabbitMQ as RabbitMQ
+end box
+
+box "Cache" #Tomato
+participant Redis  as Redis
+end box
+box "Database" #LightBlue
+participant MesDb  as MesDB
+end box
+
+group NewOrder
+  CRMAPI -> RabbitMQ: New order publish
+  RabbitMQ -> MESAPI: New order read
+  MESAPI -> MESAPI: Calculate order
+  MESAPI -> Redis: Save result to cache
+  Redis -> MesDB: Save result to DB
+end
+
+group Operator Reads
+  MES -> MESAPI: Request list of orders
+  MESAPI -> Redis: Load Info about orders
+end
+
+@enduml
